@@ -1,10 +1,36 @@
 import React, { useState, useEffect } from 'react';
+import { submitComment } from '../services';
 
-const CommentsForm = () => {
+const CommentsForm = ({ slug }) => {
   const [error, setError] = useState(false);
   const [localStorage, setLocalStorage] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [formData, setFormData] = useState({ name: null, email: null, comment: null, storeData: false });
+
+  useEffect(() => {
+    setLocalStorage(window.localStorage);
+    const initialFormData = {
+      name: window.localStorage.getItem('name'),
+      email: window.localStorage.getItem('email'),
+      storeData: window.localStorage.getItem('name') || window.localStorage.getItem('email'),
+    };
+    setFormData(initialFormData);
+  }, []);
+
+  const onInputChange = (e) => {
+    const { target } = e;
+    if (target.type === 'checkbox') {
+      setFormData((prevState) => ({
+        ...prevState,
+        [target.name]: target.checked,
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [target.name]: target.value,
+      }));
+    }
+  };
 
   const handlePostSubmission = () => {
     setError(false);
@@ -16,12 +42,7 @@ const CommentsForm = () => {
       return;
     }
 
-    const commentObj = {
-      name,
-      email,
-      comment,
-      slug,
-    };
+    const commentObj = {name, email,  comment, slug };
 
     if (storeData) {
       localStorage.setItem('name', name);
@@ -30,6 +51,15 @@ const CommentsForm = () => {
       localStorage.removeItem('name');
       localStorage.removeItem('email');
     }
+
+    submitComment(commentObj)
+        .then((res) => {
+          setShowSuccessMessage(true);
+
+          setTimeout(() => {
+            setShowSuccessMessage(false);
+          }, 3000);
+        })
   };
 
   return (
@@ -49,7 +79,7 @@ const CommentsForm = () => {
             type="text" 
             value={formData.name} 
             onChange={onInputChange} 
-            lassName="py-2 px-4 outline-none w-full rounded-lg focus:ring-2 focus:ring-gray-200 bg-gray-100 text-gray-700" 
+            className="py-2 px-4 outline-none w-full rounded-lg focus:ring-2 focus:ring-gray-200 bg-gray-100 text-gray-700" 
             placeholder="Name" 
             name="name" 
         />
